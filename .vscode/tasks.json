@@ -1,0 +1,37 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Contatur Starter: servidor",
+      "type": "npm",
+      "script": "dev",
+      "isBackground": true,
+      "problemMatcher": {
+        "owner": "contatur-starter",
+        "pattern": { "regexp": "^$" },
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": ".",
+          "endsPattern": "Local:\\s+http://localhost:5173"
+        }
+      },
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "contatur-starter"
+      }
+    },
+    {
+      "label": "Contatur Starter: abrir no Cursor",
+      "type": "shell",
+      "command": "powershell -NoProfile -ExecutionPolicy Bypass -File \"${workspaceFolder}/../scripts/abrir-simple-browser-cursor.ps1\" -Url \"http://localhost:5173\"",
+      "problemMatcher": []
+    },
+    {
+      "label": "Contatur Starter: iniciar e abrir aqui",
+      "dependsOrder": "sequence",
+      "dependsOn": ["Contatur Starter: servidor", "Contatur Starter: abrir no Cursor"],
+      "problemMatcher": []
+    }
+  ]
+}
