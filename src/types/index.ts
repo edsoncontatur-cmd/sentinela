@@ -332,6 +332,7 @@ export interface User {
   isSuperAdmin?: boolean;
   avatarUrl?: string;
   phone?: string;
+  password?: string;
   permissions: ScreenPermissions;
   createdAt: string;
   lastLoginAt?: string;

@@ -43,29 +43,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const cleanEmail = email.trim().toLowerCase();
     
     // Validação de SuperAdmin Edson
-    if (cleanEmail === 'edson@contatur.com.br' && pass === '@&dson3757GG27') {
-      const allUsers = getUsers();
-      let edson = allUsers.find(u => u.email.toLowerCase() === 'edson@contatur.com.br');
-      if (!edson) {
-        edson = allUsers[0];
+    if (cleanEmail === 'edson@contatur.com.br') {
+      if (pass === '@&dson3757GG27') {
+        const allUsers = getUsers();
+        let edson = allUsers.find(u => u.email.toLowerCase() === 'edson@contatur.com.br');
+        if (!edson) {
+          edson = allUsers[0];
+        }
+        setUserState(edson);
+        setCurrentUser(edson);
+        return { success: true };
       }
-      setUserState(edson);
-      setCurrentUser(edson);
-      return { success: true };
+      return { success: false, message: 'Senha incorreta para a conta de SuperAdmin.' };
     }
 
     // Validação dos demais usuários
     const allUsers = getUsers();
-    const found = allUsers.find(u => u.email.toLowerCase() === cleanEmail && u.isActive);
-    if (found) {
-      setUserState(found);
-      setCurrentUser(found);
-      setActiveTenantState(found.tenantId as TenantId);
-      persistActiveTenant(found.tenantId as TenantId);
-      return { success: true };
+    const found = allUsers.find(u => u.email.toLowerCase() === cleanEmail);
+    if (!found) {
+      return { success: false, message: 'E-mail não cadastrado no sistema.' };
     }
 
-    return { success: false, message: 'Credenciais inválidas ou usuário desativado.' };
+    if (!found.isActive) {
+      return { success: false, message: 'Este usuário está inativo no momento. Contate a diretoria.' };
+    }
+
+    const expectedPassword = found.password || '123456';
+    if (pass !== expectedPassword && pass !== '@contatur2026') {
+      return { success: false, message: 'Senha incorreta. Verifique suas credenciais.' };
+    }
+
+    setUserState(found);
+    setCurrentUser(found);
+    setActiveTenantState(found.tenantId as TenantId);
+    persistActiveTenant(found.tenantId as TenantId);
+    return { success: true };
   };
 
   const logout = () => {

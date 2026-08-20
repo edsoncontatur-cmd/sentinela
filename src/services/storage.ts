@@ -560,8 +560,14 @@ export function saveTenantConfig(config: TenantConfig): void {
 // Usuário Atual & Tenant Ativo
 export function getCurrentUser(): User | null {
   const data = localStorage.getItem(STORAGE_KEYS.CURRENT_USER);
-  if (data) return JSON.parse(data);
-  return INITIAL_USERS[0];
+  if (data) {
+    try {
+      return JSON.parse(data);
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 export function setCurrentUser(user: User | null): void {

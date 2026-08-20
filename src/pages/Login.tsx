@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { ShieldCheck, Lock, Mail, AlertCircle, Sparkles, Building2 } from 'lucide-react';
+import { ShieldCheck, Lock, Mail, AlertCircle, Sparkles, Eye, EyeOff } from 'lucide-react';
 
 export const Login: React.FC = () => {
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -17,15 +18,10 @@ export const Login: React.FC = () => {
     setTimeout(() => {
       const res = login(email, password);
       if (!res.success) {
-        setErrorMsg(res.message || 'Credenciais inválidas.');
+        setErrorMsg(res.message || 'Credenciais inválidas. Verifique seu e-mail e senha.');
       }
       setLoading(false);
     }, 400);
-  };
-
-  const handleQuickLogin = (quickEmail: string, quickPass: string) => {
-    setEmail(quickEmail);
-    setPassword(quickPass);
   };
 
   return (
@@ -38,7 +34,7 @@ export const Login: React.FC = () => {
           <div className="w-14 h-14 bg-white/10 rounded-2xl mx-auto flex items-center justify-center border border-white/20 shadow-inner mb-3">
             <ShieldCheck className="w-8 h-8 text-[#6DCFF6]" />
           </div>
-          <h1 className="text-2xl font-black tracking-tight">CONTATUR SENTINEL</h1>
+          <h1 className="text-2xl font-black tracking-tight">CONTATUR SENTINELA</h1>
           <p className="text-xs text-slate-200 mt-1 font-medium">
             Monitoramento Corporativo de E-mails & IA Preventiva
           </p>
@@ -49,8 +45,13 @@ export const Login: React.FC = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <div className="text-center pb-2">
+            <h2 className="text-base font-bold text-slate-800">Autenticação de Acesso</h2>
+            <p className="text-xs text-slate-500">Informe suas credenciais para acessar o painel</p>
+          </div>
+
           {errorMsg && (
-            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs flex items-start gap-2">
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-700 text-xs flex items-start gap-2 animate-in fade-in">
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
               <span>{errorMsg}</span>
             </div>
@@ -63,10 +64,11 @@ export const Login: React.FC = () => {
               <input
                 type="email"
                 required
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="seu.email@contatur.com.br"
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#004677] focus:border-[#004677] outline-none"
+                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#004677] focus:border-[#004677] outline-none transition-all"
               />
             </div>
           </div>
@@ -76,64 +78,48 @@ export const Login: React.FC = () => {
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
               <input
-                type="password"
+                type={showPassword ? 'text' : 'password'}
                 required
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#004677] focus:border-[#004677] outline-none"
+                className="w-full pl-9 pr-10 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-[#004677] focus:border-[#004677] outline-none transition-all"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 focus:outline-none"
+                tabIndex={-1}
+                aria-label={showPassword ? 'Ocultar senha' : 'Exibir senha'}
+              >
+                {showPassword ? (
+                  <EyeOff className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+              </button>
             </div>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-[#004677] hover:bg-[#003357] text-white font-bold rounded-lg text-sm shadow-md transition-all flex items-center justify-center gap-2"
+            className="w-full py-2.5 bg-[#004677] hover:bg-[#003357] text-white font-bold rounded-lg text-sm shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
           >
-            {loading ? 'Autenticando...' : 'Entrar no Sistema'}
+            {loading ? (
+              <>
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                <span>Autenticando...</span>
+              </>
+            ) : (
+              'Acessar Sistema'
+            )}
           </button>
         </form>
 
-        {/* Atalhos para Demonstração de Perfis */}
-        <div className="p-4 bg-slate-50 border-t border-slate-200 text-xs space-y-2">
-          <p className="font-bold text-slate-600 text-[11px] uppercase tracking-wide">
-            Acessos Rápidos Homologados:
-          </p>
-          <div className="grid grid-cols-2 gap-2 text-[11px]">
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('edson@contatur.com.br', '@&dson3757GG27')}
-              className="p-2 rounded bg-white hover:bg-sky-50 border border-slate-200 text-left font-medium text-[#004677] shadow-2xs hover:border-[#004677]"
-            >
-              <div className="font-bold">👑 SuperAdmin Global</div>
-              <div className="text-[10px] text-slate-500">edson@contatur.com.br</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('carlos.gerencia@contatur.com.br', '123456')}
-              className="p-2 rounded bg-white hover:bg-sky-50 border border-slate-200 text-left font-medium text-[#004677] shadow-2xs hover:border-[#004677]"
-            >
-              <div className="font-bold">🏢 Gerente SP</div>
-              <div className="text-[10px] text-slate-500">carlos.gerencia@...</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('renata.gerencia@contatur-rio.com.br', '123456')}
-              className="p-2 rounded bg-white hover:bg-sky-50 border border-slate-200 text-left font-medium text-[#004677] shadow-2xs hover:border-[#004677]"
-            >
-              <div className="font-bold">🏢 Gerente Rio</div>
-              <div className="text-[10px] text-slate-500">renata.gerencia@...</div>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickLogin('gustavo.gerencia@mkpcontabil.com.br', '123456')}
-              className="p-2 rounded bg-white hover:bg-sky-50 border border-slate-200 text-left font-medium text-[#004677] shadow-2xs hover:border-[#004677]"
-            >
-              <div className="font-bold">🏢 Gerente MKP</div>
-              <div className="text-[10px] text-slate-500">gustavo.gerencia@...</div>
-            </button>
-          </div>
+        <div className="p-4 bg-slate-50 border-t border-slate-200 text-center text-[11px] text-slate-500">
+          Acesso restrito a colaboradores autorizados do Grupo Contatur.
         </div>
       </div>
     </div>
