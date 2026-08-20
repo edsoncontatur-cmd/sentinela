@@ -1,0 +1,267 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------
+// 1. TENANT (Escritórios Contatur: SP, Rio, MKP)
+// ---------------------------------------------------------
+model Tenant {
+  id                  String   @id // 'contatur_sp' | 'contatur_rio' | 'mkp_sp'
+  name                String
+  slug                String   @unique
+  city                String
+  cnpj                String
+  activeClientsCount  Int      @default(0)
+  monthlyRevenueTotal Float    @default(0.0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  users               User[]
+  mailboxes           MonitoredMailbox[]
+  incidents           Incident[]
+  clients             ClientEntity[]
+  commercialLeads     CommercialLead[]
+  qualityAudits       QualityAuditRecord[]
+  monthlyBroadcasts   MonthlyBroadcastCircular[]
+  teamWorkload        TeamWorkloadMember[]
+  config              TenantConfig?
+
+  @@map("tenants")
+}
+
+// ---------------------------------------------------------
+// 2. USUÁRIOS
+// ---------------------------------------------------------
+model User {
+  id           String   @id @default(cuid())
+  tenantId     String
+  name         String
+  email        String   @unique
+  passwordHash String?
+  role         String   @default("analista") // 'diretor' | 'gerente' | 'supervisor' | 'analista'
+  department   String   @default("GERAL")
+  permissions  Json     @default("[]") // Lista de permissões em JSON
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  tenant       Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("users")
+}
+
+// ---------------------------------------------------------
+// 3. CAIXAS POSTAIS MONITORADAS
+// ---------------------------------------------------------
+model MonitoredMailbox {
+  id             String    @id @default(cuid())
+  tenantId       String
+  name           String
+  email          String
+  department     String
+  protocol       String    @default("GRAPH_API") // 'GRAPH_API' | 'IMAP' | 'EXCHANGE'
+  host           String?
+  port           Int?
+  active         Boolean   @default(true)
+  unreadCount    Int       @default(0)
+  syncIntervalMin Int      @default(5)
+  lastSyncAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  tenant         Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("monitored_mailboxes")
+}
+
+// ---------------------------------------------------------
+// 4. INCIDENTES & ATENDIMENTO
+// ---------------------------------------------------------
+model Incident {
+  id                            String    @id @default(cuid())
+  tenantId                      String
+  code                          String    @unique // ex: INC-2026-001
+  clientName                    String
+  clientCnpj                    String?
+  senderEmail                   String
+  recipientMailbox              String
+  department                    String    @default("GERAL")
+  subject                       String
+  rawBody                       String    @db.Text
+  summary                       String    @db.Text
+  suggestedAction               String?   @db.Text
+  suggestedResponseDraft        String?   @db.Text
+  urgency                       String    @default("MEDIA") // 'BAIXA' | 'MEDIA' | 'ALTA' | 'CRITICA'
+  sentiment                     String    @default("NEUTRO") // 'POSITIVO' | 'NEUTRO' | 'INSATISFEITO' | 'RANCOROSO_CRITICO'
+  status                        String    @default("NOVO") // 'NOVO' | 'EM_ANALISE' | 'RESPOSTA_RASCUNHO' | 'RESPONDIDO' | 'RESOLVIDO' | 'IGNORADO'
+  resolutionNotes               String?   @db.Text
+  assignedTo                    String?
+  postServiceTouchpointScheduled Boolean   @default(false)
+  postServiceTouchpointSentAt   DateTime?
+  supervisorMediation           Json?     // SupervisorMediation em JSON
+  history                       Json      @default("[]") // IncidentHistoryEntry[] em JSON
+  createdAt                     DateTime  @default(now())
+  updatedAt                     DateTime  @updatedAt
+  resolvedAt                    DateTime?
+
+  tenant                        Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([urgency])
+  @@map("incidents")
+}
+
+// ---------------------------------------------------------
+// 5. RADAR DE CLIENTES & PREVENÇÃO DE CHURN
+// ---------------------------------------------------------
+model ClientEntity {
+  id                         String   @id @default(cuid())
+  tenantId                   String
+  name                       String
+  cnpj                       String
+  curveABC                   String   @default("B") // 'A' | 'B' | 'C'
+  monthlyFee                 Float    @default(0.0)
+  healthScore                Int      @default(80)
+  ghostingStatus             String   @default("NORMAL") // 'NORMAL' | 'ALERTA_SILENCIO' | 'CRITICO_GHOSTING'
+  interactionDropPercentage  Float    @default(0.0)
+  statusRelacionamento       String   @default("Estável") // 'Excelente' | 'Estável' | 'Em Risco' | 'Crítico'
+  contactEmails              Json     @default("[]") // string[] em JSON
+  notes                      Json     @default("[]") // ClientNote[] em JSON
+  churnForecast              Json?    // ChurnPredictionForecast em JSON
+  totalIncidentsCount        Int      @default(0)
+  criticalIncidentsCount     Int      @default(0)
+  createdAt                  DateTime @default(now())
+  updatedAt                  DateTime @updatedAt
+
+  tenant                     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, cnpj])
+  @@index([tenantId])
+  @@index([healthScore])
+  @@map("clients")
+}
+
+// ---------------------------------------------------------
+// 6. OPORTUNIDADES COMERCIAIS (LEADS)
+// ---------------------------------------------------------
+model CommercialLead {
+  id                   String   @id @default(cuid())
+  tenantId             String
+  clientName           String
+  contactEmail         String
+  detectedNeed         String   @db.Text
+  estimatedValue       Float    @default(0.0)
+  confidenceScore      Float    @default(0.85)
+  sourceEmailSubject   String
+  status               String   @default("NOVO") // 'NOVO' | 'CONTATADO' | 'PROPOSTA_ENVIADA' | 'GANHO' | 'PERDIDO'
+  assignedTo           String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("commercial_leads")
+}
+
+// ---------------------------------------------------------
+// 7. AUDITORIA DE QUALIDADE DE ATENDIMENTO
+// ---------------------------------------------------------
+model QualityAuditRecord {
+  id              String   @id @default(cuid())
+  tenantId        String
+  incidentCode    String
+  analystName     String
+  department      String
+  emailSubject    String
+  auditScore      Int      @default(85)
+  status          String   @default("CONFORME") // 'CONFORME' | 'ALERTA_POSTURA' | 'NAO_CONFORME_GRAVE'
+  positivePoints  Json     @default("[]") // string[] em JSON
+  improvementAreas Json    @default("[]") // string[] em JSON
+  feedback        String   @db.Text
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenant          Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("quality_audits")
+}
+
+// ---------------------------------------------------------
+// 8. CIRCULARES MENSAIS MULTISSETORIAIS
+// ---------------------------------------------------------
+model MonthlyBroadcastCircular {
+  id              String    @id @default(cuid())
+  tenantId        String
+  referenceMonth  String    // ex: "2026-08"
+  overallStatus   String    @default("EM_ELABORACAO_IA") // 'EM_ELABORACAO_IA' | 'AGUARDANDO_SUPERVISORES' | '100%_APROVADO_PRONTO' | 'DISPARADO_EM_LOTE'
+  sections        Json      // Objeto com { folha, fiscal, contabil, legal }
+  dispatchedAt    DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  tenant          Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, referenceMonth])
+  @@index([tenantId])
+  @@map("monthly_broadcasts")
+}
+
+// ---------------------------------------------------------
+// 9. CARGA DE TRABALHO & BURNOUT DA EQUIPE
+// ---------------------------------------------------------
+model TeamWorkloadMember {
+  id                   String   @id @default(cuid())
+  tenantId             String
+  name                 String
+  email                String
+  department           String
+  role                 String
+  openTicketsCount     Int      @default(0)
+  slaBreachRisk        String   @default("NORMAL") // 'NORMAL' | 'ATENCAO' | 'ALTO_RISCO'
+  burnoutIndex         Int      @default(30) // 0 - 100
+  sentimentScore       Float    @default(80.0)
+  lastOvertimeAlert    String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  tenant               Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+  @@map("team_workload")
+}
+
+// ---------------------------------------------------------
+// 10. CONFIGURAÇÕES POR ESCRITÓRIO (TENANT)
+// ---------------------------------------------------------
+model TenantConfig {
+  tenantId                  String   @id
+  aiSensitivity             String   @default("MODERADA") // 'BAIXA' | 'MODERADA' | 'ALTA'
+  quietHoursStart           String   @default("19:00")
+  quietHoursEnd             String   @default("07:00")
+  enableAutoDraft           Boolean  @default(true)
+  notifyOnCriticalSentiment Boolean  @default(true)
+  sgcIntegration            Json     // SgcIntegrationConfig em JSON
+  meetingIntegration        Json     // MeetingIntegrationConfig em JSON
+  supervisorWorkflow        Json     // SupervisorWorkflowSettings em JSON
+  monthlyBroadcastSettings  Json     // MonthlyBroadcastSettings em JSON
+  createdAt                 DateTime @default(now())
+  updatedAt                 DateTime @updatedAt
+
+  tenant                    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@map("tenant_configs")
+}
