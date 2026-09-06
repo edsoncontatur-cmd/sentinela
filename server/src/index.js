@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import path from 'path';
 import fs from 'fs';
+import crypto from 'crypto';
 import { fileURLToPath } from 'url';
 import prisma from './db.js';
 import { seedDatabase } from './seed.js';
@@ -14,8 +15,10 @@ const PORT = process.env.PORT || 4015;
 const DIST_DIR = path.resolve(__dirname, '../../dist');
 
 // Middlewares
-app.use(cors());
-app.use(express.json());
+// CORS restrito à própria origem pública em produção (antes: aberto a qualquer site).
+const PUBLIC_ORIGIN = (process.env.PUBLIC_URL || '').replace(/\/+$/, '');
+app.use(cors(PUBLIC_ORIGIN ? { origin: PUBLIC_ORIGIN } : {}));
+app.use(express.json({ limit: '1mb' }));
 
 // Security Headers
 app.use((req, res, next) => {
@@ -46,6 +49,38 @@ app.get('/api/health', healthHandler);
 // 2. ROTAS DA API REST (Multi-Tenant)
 // ---------------------------------------------------------
 
+// Proteção da API (2026-09-06). O Sentinela ainda não tem login no servidor: o
+// frontend guarda tudo em localStorage e não chama /api/*. Até existir
+// autenticação real, toda rota /api/* (exceto health) exige o token de serviço
+// SENTINELA_API_TOKEN. Em produção sem o token configurado a API responde 503
+// (fail-closed) em vez de ficar aberta na internet.
+const API_TOKEN = (process.env.SENTINELA_API_TOKEN || '').trim();
+const IS_PROD = process.env.NODE_ENV === 'production';
+
+function tokenConfere(recebido) {
+  if (!API_TOKEN || !recebido) return false;
+  const a = Buffer.from(recebido);
+  const b = Buffer.from(API_TOKEN);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+app.use('/api', (req, res, next) => {
+  if (req.path === '/health') return next();
+  if (!API_TOKEN) {
+    if (IS_PROD) {
+      return res.status(503).json({ error: 'API do Sentinela desativada: SENTINELA_API_TOKEN não configurado.' });
+    }
+    return next(); // desenvolvimento local sem token: comportamento antigo
+  }
+  const auth = String(req.headers.authorization || '');
+  const recebido = auth.startsWith('Bearer ') ? auth.slice(7).trim() : String(req.headers['x-api-key'] || '').trim();
+  if (!tokenConfere(recebido)) {
+    return res.status(401).json({ error: 'Não autorizado.' });
+  }
+  return next();
+});
+
+
 // Helper para extrair tenant
 function getTenantFilter(req) {
   const tenantId = req.query.tenantId || req.headers['x-tenant-id'];
@@ -55,6 +90,9 @@ function getTenantFilter(req) {
 
 // Seed endpoint
 app.post('/api/seed', async (req, res) => {
+  if (IS_PROD) {
+    return res.status(403).json({ error: 'Seed desativado em produção.' });
+  }
   try {
     await seedDatabase();
     res.json({ ok: true, message: 'Banco de dados populado com sucesso' });

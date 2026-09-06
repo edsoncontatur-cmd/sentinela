@@ -14,7 +14,7 @@
 | **Migrations** | `npx prisma migrate deploy` |
 | **Pasta de saída** | `dist` |
 | **Start** | `node server/src/index.js` |
-| **Porta interna** | `4015` *(ou outra porta única livre na VM)* |
+| **Porta interna** | `4016` *(ou outra porta única livre na VM)* |
 | **Health-check (rota)** | `/health.json` |
 | **Runtime Detectado** | `node-with-static` *(Obrigatório)* |
 
@@ -24,11 +24,12 @@
 
 | Variável | Valor | Obrigatória |
 |---|---|---|
-| `PORT` | `4015` *(deve ser idêntica à Porta interna do cadastro)* | ✅ |
+| `PORT` | `4016` *(deve ser idêntica à Porta interna do cadastro)* | ✅ |
 | `NODE_ENV` | `production` | ✅ |
 | `PUBLIC_URL` | `https://sentinela.grupocontaturmkp.com.br` | ✅ |
 | `TRUST_PROXY` | `1` | ✅ |
 | `VITE_PUBLIC_URL` | `https://sentinela.grupocontaturmkp.com.br` | ✅ |
+| `SENTINELA_API_TOKEN` | token longo aleatório (64 hex) — protege toda a API `/api/*`; sem ele a API responde 503 em produção (decisão 2026-09-06) | ✅ |
 | `DATABASE_URL` | `postgresql://usuario:senha@localhost:5432/sentinela?schema=public` | ✅ |
 
 ---
