@@ -45,11 +45,15 @@ model User {
   tenantId     String
   name         String
   email        String   @unique
-  passwordHash String?
-  role         String   @default("analista") // 'diretor' | 'gerente' | 'supervisor' | 'analista'
+  passwordHash String?  // bcrypt; nunca sai da API (ver GET /api/users)
+  role         String   @default("role_analyst") // 'role_superadmin' | 'role_unit_admin' | 'role_supervisor' | 'role_analyst'
   department   String   @default("GERAL")
-  permissions  Json     @default("[]") // Lista de permissões em JSON
+  permissions  Json     @default("{}") // ScreenPermissions (matriz por tela) em JSON
+  isActive     Boolean  @default(true)
+  isSuperAdmin Boolean  @default(false) // visão consolidada das 3 unidades
+  phone        String?
   avatarUrl    String?
+  lastLoginAt  DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -254,10 +258,16 @@ model TenantConfig {
   quietHoursEnd             String   @default("07:00")
   enableAutoDraft           Boolean  @default(true)
   notifyOnCriticalSentiment Boolean  @default(true)
-  sgcIntegration            Json     // SgcIntegrationConfig em JSON
-  meetingIntegration        Json     // MeetingIntegrationConfig em JSON
-  supervisorWorkflow        Json     // SupervisorWorkflowSettings em JSON
-  monthlyBroadcastSettings  Json     // MonthlyBroadcastSettings em JSON
+  sgcIntegration            Json     @default("{}") // SgcIntegrationConfig em JSON (sem token)
+  meetingIntegration        Json     @default("{}") // MeetingIntegrationConfig em JSON (sem token)
+  supervisorWorkflow        Json     @default("{}") // SupervisorWorkflowSettings em JSON
+  monthlyBroadcastSettings  Json     @default("{}") // MonthlyBroadcastSettings em JSON
+  // Demais parâmetros da tela de Configurações (e-mail, IA, alertas, SLA) — SEM segredos.
+  settings                  Json     @default("{}")
+  // Segredos de integração (client secret M365, senha IMAP, chave de IA, tokens
+  // WhatsApp/Telegram/SGC/Meeting, webhooks) cifrados com AES-256-GCM
+  // (SENTINELA_ENCRYPTION_KEY). Nunca são devolvidos pela API: só `configurado: true`.
+  secrets                   Json     @default("{}")
   createdAt                 DateTime @default(now())
   updatedAt                 DateTime @updatedAt
 
