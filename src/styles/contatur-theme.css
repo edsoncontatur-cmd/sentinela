@@ -221,3 +221,44 @@ textarea {
     hsl(var(--brand-ciano-50)) 100%
   ) !important;
 }
+
+/* ===========================================================================
+ * ESCALA DE BOTÕES E CONTROLES
+ * ===========================================================================
+ * Acrescentada em 10/09/2026 depois de medir o auditoria-balancetes: 109 regras
+ * de botão, com 10 raios, 28 combinações de espaçamento e 12 alturas diferentes
+ * (30, 32, 34, 36, 38, 40px...). Nenhuma concordava com a outra, e o resultado
+ * é o que se vê: cada tela com botões de um tamanho.
+ *
+ * A resposta não é achatar tudo num tamanho só — botão de ícone e botão de
+ * formulário legitimamente diferem. A resposta é uma escala curta: três
+ * tamanhos, escolhidos de propósito, em vez de doze surgidos por acaso.
+ *
+ * Ao ajustar um botão, use o degrau mais próximo. Se nenhum servir, o problema
+ * provavelmente é outro (o botão está fazendo trabalho de link, ou o
+ * contêiner está apertado) — inventar um 13º valor recria o problema.
+ */
+:root {
+  /* Altura dos degraus */
+  --ctrl-altura-sm: 32px;   /* ações secundárias, botões de ícone, filtros */
+  --ctrl-altura-md: 36px;   /* padrão: formulários, barras de ferramentas   */
+  --ctrl-altura-lg: 40px;   /* ação principal da tela, envio de formulário  */
+
+  /* Espaçamento interno horizontal, proporcional a cada degrau */
+  --ctrl-px-sm: 10px;
+  --ctrl-px-md: 14px;
+  --ctrl-px-lg: 18px;
+
+  /* Tipografia dos controles */
+  --ctrl-fonte-sm: 0.8125rem;  /* 13px */
+  --ctrl-fonte-md: 0.875rem;   /* 14px */
+  --ctrl-fonte-lg: 0.9375rem;  /* 15px */
+  --ctrl-peso: 600;
+
+  /* Raio. Botão-pílula continua existindo, mas por escolha, não por acaso. */
+  --ctrl-raio: var(--radius);
+  --ctrl-raio-pilula: 999px;
+
+  /* Distância entre controles vizinhos numa mesma barra */
+  --ctrl-gap: 8px;
+}
