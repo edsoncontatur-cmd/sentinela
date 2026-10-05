@@ -1,4 +1,12 @@
-# Sentinela
+# Sentinela (antigo — ARQUIVADO)
+
+> **ARQUIVADO em 05/10/2026 (incorporado ao novo Sentinela, pasta `Monitor`).** Este app era uma demonstração: a tela
+> rodava só no navegador com dados inventados e "IA" por palavras-chave; não lia caixa nenhuma. A função (governança das
+> caixas de e-mail e detecção de reclamações de clientes) foi refeita com leitura real do Microsoft 365 na área **E-mail**
+> do Sentinela (`Sistemas\Monitor`, ex-DeskGuard). Banco sem dados; cópia em
+> `C:\Apps\_arquivo\sentinela\sentinela-banco-2026-10-05.dump` (guardar até 04/11/2026). Falta o Edson remover o app pelo
+> botão "Remover da VM" do Publicador — isso libera o endereço `sentinela.` para o app novo. Não desenvolver aqui.
+> Plano: `Sistemas/PLANO-FUSAO-DESKGUARD-SENTINELA.md`.
 
 Monitoramento inteligente de e-mails e gestão de reclamações com IA.
 
