@@ -14,6 +14,10 @@ Monitoramento inteligente de e-mails e gestão de reclamações com IA.
 **Repositório:** `edsoncontatur-cmd/sentinela`
 **Stack:** React 18 · Express 5 · Prisma · PostgreSQL
 
+## Cartões KPI — composição ao clicar
+
+Padrão SGD (`CartaoComposicao` / `DialogoComposicao` em `src/components/common/CartaoComposicao.tsx`): clique no cartão de KPI/resumo abre diálogo com as linhas que montam o valor. Montagem pura em `src/lib/composicao-cartoes.ts`. Telas novas devem preferir este componente.
+
 ## Comandos
 
 ```bash

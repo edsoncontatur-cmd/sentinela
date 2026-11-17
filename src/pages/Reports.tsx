@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getIncidents, getClients, getMailboxes } from '../services/storage';
-import { FileText, Download, Printer, Filter, CheckCircle2, TrendingUp, ShieldAlert } from 'lucide-react';
+import { getIncidents } from '../services/storage';
+import { FileText, Download, Printer, CheckCircle2 } from 'lucide-react';
+import { CartaoComposicao } from '@/components/common/CartaoComposicao';
+import { composicaoIncidentesPorSeveridade } from '@/lib/composicao-cartoes';
 
 export const ReportsPage: React.FC = () => {
   const { activeTenant } = useAuth();
   const incidents = getIncidents(activeTenant);
-  const clients = getClients(activeTenant);
-  const mailboxes = getMailboxes(activeTenant);
 
-  const [period, setPeriod] = useState('mensal');
   const [downloadSuccess, setDownloadSuccess] = useState<string | null>(null);
 
   const totalIncidents = incidents.length;
@@ -100,24 +99,51 @@ export const ReportsPage: React.FC = () => {
           </span>
         </div>
 
-        {/* Resumo em Números */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <p className="text-2xl font-black text-[#004677]">{totalIncidents}</p>
-            <p className="text-[11px] font-bold text-slate-500 uppercase mt-1">Total de Atritos</p>
-          </div>
-          <div className="p-4 bg-red-50 rounded-lg border border-red-200">
-            <p className="text-2xl font-black text-red-600">{criticalCount}</p>
-            <p className="text-[11px] font-bold text-red-700 uppercase mt-1">Críticos (Nível 1)</p>
-          </div>
-          <div className="p-4 bg-amber-50 rounded-lg border border-amber-200">
-            <p className="text-2xl font-black text-amber-700">{highCount}</p>
-            <p className="text-[11px] font-bold text-amber-800 uppercase mt-1">Severidade Alta</p>
-          </div>
-          <div className="p-4 bg-emerald-50 rounded-lg border border-emerald-200">
-            <p className="text-2xl font-black text-emerald-700">{resolvedCount}</p>
-            <p className="text-[11px] font-bold text-emerald-800 uppercase mt-1">Resolvidos</p>
-          </div>
+        {/* Resumo em Números — clique abre a composição */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <CartaoComposicao
+            testId="kpi-relatorio-total"
+            titulo="Total de Atritos"
+            valor={totalIncidents}
+            valorClassName="text-primary"
+            explica="Todas as ocorrências registradas na unidade no período do boletim."
+            linhas={composicaoIncidentesPorSeveridade(incidents, 'TODOS')}
+            rodape={`${totalIncidents} ocorrência(s)`}
+            className="bg-slate-50 p-4 shadow-none"
+          />
+          <CartaoComposicao
+            testId="kpi-relatorio-criticos"
+            titulo="Críticos (Nível 1)"
+            tituloClassName="text-red-700"
+            valor={criticalCount}
+            valorClassName="text-red-600"
+            explica="Ocorrências classificadas pela IA com severidade CRITICAL."
+            linhas={composicaoIncidentesPorSeveridade(incidents, 'CRITICAL')}
+            rodape={`${criticalCount} crítico(s)`}
+            className="bg-red-50 border-red-200 p-4 shadow-none"
+          />
+          <CartaoComposicao
+            testId="kpi-relatorio-alta"
+            titulo="Severidade Alta"
+            tituloClassName="text-amber-800"
+            valor={highCount}
+            valorClassName="text-amber-700"
+            explica="Ocorrências classificadas pela IA com severidade HIGH."
+            linhas={composicaoIncidentesPorSeveridade(incidents, 'HIGH')}
+            rodape={`${highCount} de severidade alta`}
+            className="bg-amber-50 border-amber-200 p-4 shadow-none"
+          />
+          <CartaoComposicao
+            testId="kpi-relatorio-resolvidos"
+            titulo="Resolvidos"
+            tituloClassName="text-emerald-800"
+            valor={resolvedCount}
+            valorClassName="text-emerald-700"
+            explica="Ocorrências com status RESOLVIDO no boletim da unidade."
+            linhas={composicaoIncidentesPorSeveridade(incidents, 'RESOLVIDO')}
+            rodape={`${resolvedCount} resolvido(s) de ${totalIncidents}`}
+            className="bg-emerald-50 border-emerald-200 p-4 shadow-none"
+          />
         </div>
 
         {/* Tabela do Relatório */}

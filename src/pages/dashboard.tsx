@@ -1,11 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getIncidents, getMailboxes, getClients, saveIncident, getTenantConfig } from '../services/storage';
+import { getIncidents, getMailboxes, getClients, saveIncident, getTenantConfig, getCommercialLeads } from '../services/storage';
 import { analyzeEmailWithAI } from '../services/aiSimulator';
 import { Incident, IncidentSeverity } from '../types';
 import { 
-  AlertTriangle, 
-  CheckCircle2, 
   Clock, 
   Mail, 
   TrendingUp, 
@@ -13,10 +11,19 @@ import {
   Sparkles, 
   ArrowUpRight,
   Flame,
-  Building2,
   Play
 } from 'lucide-react';
 import { Link } from 'wouter';
+import { CartaoComposicao } from '@/components/common/CartaoComposicao';
+import {
+  composicaoEmailsMonitorados,
+  composicaoGhosting,
+  composicaoHonorariosCriticos,
+  composicaoOportunidadesComerciais,
+  formatarMoedaBr,
+  honorariosCriticosTotal,
+  potencialReceitaExtra,
+} from '@/lib/composicao-cartoes';
 
 export const Dashboard: React.FC = () => {
   const { activeTenant, isSuperAdmin } = useAuth();
@@ -40,7 +47,16 @@ export const Dashboard: React.FC = () => {
   const resolvedCount = incidents.filter((i) => i.status === 'RESOLVIDO').length;
 
   const mailboxes = getMailboxes(activeTenant);
+  const clients = getClients(activeTenant);
+  const commercialLeads = getCommercialLeads(activeTenant);
   const totalEmailsAnalyzed = mailboxes.reduce((acc, m) => acc + m.totalEmailsReceived, 0);
+  const honorariosCriticos = honorariosCriticosTotal(clients);
+  const ghostingCount = clients.filter((c) => c.ghostingStatus === 'CRITICO_GHOSTING').length;
+  const receitaExtra = potencialReceitaExtra(commercialLeads);
+  const linhasHonorarios = composicaoHonorariosCriticos(clients);
+  const linhasGhosting = composicaoGhosting(clients);
+  const linhasOportunidades = composicaoOportunidadesComerciais(commercialLeads);
+  const linhasEmails = composicaoEmailsMonitorados(mailboxes);
 
   // Departamentos com atritos
   const deptCounts: Record<string, number> = {};
@@ -169,69 +185,100 @@ export const Dashboard: React.FC = () => {
         </div>
       )}
 
-      {/* Grid de KPIs Executivos com Métricas Financeiras e Operacionais */}
+      {/* Grid de KPIs Executivos — clique abre a composição do número */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {/* Card 1: Honorários sob Risco Crítico */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-red-600 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-red-600 uppercase tracking-wider">Honorários sob Risco Crítico</p>
+        <CartaoComposicao
+          testId="kpi-honorarios-criticos"
+          titulo="Honorários sob Risco Crítico"
+          tituloClassName="text-red-600"
+          valor={`${formatarMoedaBr(honorariosCriticos)}/mês`}
+          valorClassName="text-red-600"
+          detalhe={
+            <span className="font-medium text-red-500">
+              {linhasHonorarios.filter((l) => l.id).length} cliente(s) com risco de rescisão imediata
+              {criticalCount > 0 ? ` · ${criticalCount} incidente(s) críticos abertos` : ''}
+            </span>
+          }
+          explica="Soma dos honorários mensais dos clientes com status de relacionamento Crítico na unidade selecionada."
+          linhas={linhasHonorarios}
+          rodape={`Total: ${formatarMoedaBr(honorariosCriticos)}/mês`}
+          className="border-t-4 border-t-red-600"
+          icone={
             <div className="w-8 h-8 rounded-lg bg-red-50 flex items-center justify-center text-red-600">
               <ShieldAlert className="w-4 h-4" />
             </div>
-          </div>
-          <p className="text-2xl font-black text-red-600 mt-2">
-            R$ {getClients(activeTenant).filter(c => c.statusRelacionamento === 'Crítico').reduce((acc, c) => acc + c.monthlyFee, 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/mês
-          </p>
-          <p className="text-[11px] text-red-500 mt-1 font-medium">
-            {criticalCount} cliente(s) com risco de rescisão imediata
-          </p>
-        </div>
+          }
+        />
 
-        {/* Card 2: Radar de Silêncio (Ghosting Alerts) */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-purple-500 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-purple-700 uppercase tracking-wider">Alerta de Silêncio (Ghosting)</p>
+        <CartaoComposicao
+          testId="kpi-ghosting"
+          titulo="Alerta de Silêncio (Ghosting)"
+          tituloClassName="text-purple-700"
+          valor={`${ghostingCount} Cliente(s)`}
+          valorClassName="text-purple-800"
+          detalhe="Queda > 70% nas trocas de mensagens (risco silencioso)"
+          explica="Clientes com status CRITICO_GHOSTING — queda brusca de interações por e-mail, sinal clássico de churn silencioso."
+          linhas={linhasGhosting}
+          rodape={`${ghostingCount} cliente(s) em ghosting crítico`}
+          className="border-t-4 border-t-purple-500"
+          icone={
             <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-700">
               <Clock className="w-4 h-4" />
             </div>
-          </div>
-          <p className="text-2xl font-black text-purple-800 mt-2">
-            {getClients(activeTenant).filter(c => c.ghostingStatus === 'CRITICO_GHOSTING').length} Cliente(s)
-          </p>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Queda &gt; 70% nas trocas de mensagens (Risco silencioso)
-          </p>
-        </div>
+          }
+        />
 
-        {/* Card 3: Oportunidades Comerciais (Receita Extra) */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-emerald-500 relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-emerald-700 uppercase tracking-wider">Potencial de Receita Extra</p>
+        <CartaoComposicao
+          testId="kpi-receita-extra"
+          titulo="Potencial de Receita Extra"
+          tituloClassName="text-emerald-700"
+          valor={`+ ${formatarMoedaBr(receitaExtra)}/mês`}
+          valorClassName="text-emerald-700"
+          detalhe={
+            <span className="font-semibold">
+              {commercialLeads.filter((l) => l.status !== 'DECLINADO').length} oportunidade(s) detectadas pela IA
+            </span>
+          }
+          explica="Soma estimada em R$/mês das oportunidades comerciais ativas (exceto declinadas) detectadas nos e-mails e integráveis ao SGC."
+          linhas={linhasOportunidades}
+          rodape={`Total potencial: ${formatarMoedaBr(receitaExtra)}/mês`}
+          className="border-t-4 border-t-emerald-500"
+          icone={
             <div className="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
               <TrendingUp className="w-4 h-4" />
             </div>
-          </div>
-          <p className="text-2xl font-black text-emerald-700 mt-2">
-            + R$ 10.500,00/mês
-          </p>
-          <p className="text-[11px] text-slate-500 mt-1 font-semibold">
-            3 novas oportunidades detectadas pela IA
-          </p>
-        </div>
+          }
+        />
 
-        {/* Card 4: E-mails Monitorados */}
-        <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm border-t-4 border-t-[#004677] relative overflow-hidden">
-          <div className="flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-500 uppercase tracking-wider">E-mails Monitorados</p>
-            <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center text-[#004677]">
+        <CartaoComposicao
+          testId="kpi-emails-monitorados"
+          titulo="E-mails Monitorados"
+          valor={totalEmailsAnalyzed.toLocaleString('pt-BR')}
+          valorClassName="text-primary"
+          detalhe={
+            <>
+              Taxa de resolução:{' '}
+              <span className="font-bold text-emerald-600">
+                {totalIncidents > 0 ? Math.round((resolvedCount / totalIncidents) * 100) : 100}%
+              </span>
+            </>
+          }
+          explica="Total de e-mails recebidos nas caixas monitoradas da unidade. A taxa de resolução usa os incidentes registrados."
+          linhas={linhasEmails}
+          rodape={
+            <>
+              Total: {totalEmailsAnalyzed.toLocaleString('pt-BR')} · Resolvidos: {resolvedCount}/
+              {totalIncidents || 0}
+              {highCount > 0 ? ` · Alta severidade aberta: ${highCount}` : ''}
+            </>
+          }
+          className="border-t-4 border-t-primary"
+          icone={
+            <div className="w-8 h-8 rounded-lg bg-sky-50 flex items-center justify-center text-primary">
               <Mail className="w-4 h-4" />
             </div>
-          </div>
-          <p className="text-2xl font-black text-[#004677] mt-2">{totalEmailsAnalyzed.toLocaleString('pt-BR')}</p>
-          <p className="text-[11px] text-slate-500 mt-1">
-            Taxa de resolução: <span className="font-bold text-emerald-600">{totalIncidents > 0 ? Math.round((resolvedCount / totalIncidents) * 100) : 100}%</span>
-          </p>
-        </div>
+          }
+        />
       </div>
 
       {/* Banner de Calendário Fiscal Proativo */}
