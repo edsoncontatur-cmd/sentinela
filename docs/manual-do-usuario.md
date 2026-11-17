@@ -1,4 +1,4 @@
-# Manual Oficial do Usuário &bull; Contatur Sentinel v3.5
+# Manual Oficial do Usuário &bull; Contatur Sentinel v3.6
 
 > **Plataforma Corporativa de Inteligência Preventiva, Monitoramento de E-mails, Circulares Legislativas por IA e Integração com SGC & Contatur Meeting**  
 > *Grupo Contatur: Contatur São Paulo &bull; Contatur Rio &bull; MKP São Paulo*
@@ -40,10 +40,14 @@ O sistema conta com gestão granular de acessos em **`/usuarios`**, onde é poss
 ### 3.1. Cockpit de Comando & Torre de Controle (`/`)
 *Visão macro em tempo real de saúde operacional, risco financeiro e alertas proativos.*
 
-- **Honorários sob Risco Crítico (R$/mês):** Soma das mensalidades contábeis de clientes com insatisfação grave acumulada.
-- **Radar de Silêncio (Ghosting Alert - 👻):** Identifica clientes com queda superior a 70% na troca de e-mails nos últimos 21 dias.
+- **Honorários sob Risco Crítico (R$/mês):** Soma das mensalidades contábeis de clientes com insatisfação grave acumulada. **Clique no cartão** para ver a composição (clientes e valores).
+- **Radar de Silêncio (Ghosting Alert):** Identifica clientes com queda superior a 70% na troca de e-mails nos últimos 21 dias. Clique para listar quem entra no alerta.
+- **Potencial de Receita Extra:** Soma das oportunidades comerciais ativas; clique para ver cada lead que monta o total.
+- **E-mails Monitorados:** Volume por caixa monitorada; clique para a composição por mailbox.
 - **Alerta de Calendário Fiscal:** Escalonamento automático para urgência máxima de e-mails referentes a **DCTFWeb**, **EFD-Reinf**, **FGTS Digital** e **DAS** a menos de 48h do prazo legal da Receita Federal.
 - **Simulador de Ingestão:** Permite colar o texto de um e-mail de teste para validação imediata do sentimento e diagnóstico da IA.
+
+> **Composição ao clicar:** o mesmo padrão vale nos KPIs de **Carga de Trabalho**, no resumo do **Boletim/Relatórios** e no destaque de receita em **Oportunidades Comerciais**.
 
 ---
 

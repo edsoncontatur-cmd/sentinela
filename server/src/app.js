@@ -181,7 +181,7 @@ export function createApp() {
       app: 'sentinela',
       timestamp: new Date().toISOString(),
       uptime: process.uptime(),
-      version: '1.0.0',
+      version: '1.1.0',
       database,
     });
   };

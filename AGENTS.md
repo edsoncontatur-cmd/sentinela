@@ -24,6 +24,10 @@ React 18 + TypeScript + Vite + Tailwind v3 + shadcn/ui + Recharts. Tema por vari
 - `--primary: 221 83% 53%` (azul) · `--accent: 199 89% 48%` (ciano) · `--sidebar: 222 64% 33%` (navy).
 - `--radius: .75rem` · `--font-sans: 'Inter'`.
 
+## Cartões KPI
+
+Para cartões de KPI/resumo clicáveis com detalhe do número, usar `src/components/common/CartaoComposicao.tsx` (`CartaoComposicao` + `DialogoComposicao`) e, quando fizer sentido, montadores em `src/lib/composicao-cartoes.ts`. Texto da ação: **Ver composição** (PT-BR).
+
 ## Ao desenvolver
 
 - Cores **sempre** via tokens (`bg-background`, `text-muted-foreground`, `hsl(var(--…))`); **nunca** hex de marca fixo.

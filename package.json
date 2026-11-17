@@ -1,7 +1,7 @@
 {
   "name": "sentinela",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "module",
   "description": "Contatur Sentinel — Monitoramento Inteligente de E-mails e Gestão de Reclamações com IA para o Grupo Contatur.",
   "scripts": {
@@ -13,7 +13,7 @@
     "seed": "node server/src/seed.js",
     "preview": "vite preview",
     "check": "tsc --noEmit",
-    "test": "node --test server/test/"
+    "test": "node --test server/test/*.test.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

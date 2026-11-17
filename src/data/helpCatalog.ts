@@ -56,17 +56,22 @@ export const COMPREHENSIVE_HELP_CATALOG: Record<string, DetailedHelpItem> = {
         items: [
           {
             name: 'Honorários sob Risco Crítico (R$)',
-            description: 'Soma dos honorários mensais de todos os clientes que possuem reclamações graves ou sentimento crítico acumulado.',
+            description: 'Soma dos honorários mensais de todos os clientes que possuem reclamações graves ou sentimento crítico acumulado. Clique no cartão para ver a composição (lista de clientes e valores).',
             tip: 'Priorize imediatamente o atendimento desses clientes para evitar cancelamento de contrato (churn).',
           },
           {
             name: 'Alerta de Silêncio / Ghosting',
-            description: 'Indica quantos clientes da unidade reduziram em mais de 70% o volume de interações nos últimos 21 dias.',
+            description: 'Indica quantos clientes da unidade reduziram em mais de 70% o volume de interações nos últimos 21 dias. Clique para ver quem compõe o alerta.',
             tip: 'O silêncio do cliente contábil quase sempre precede o pedido de transferência de escritório.',
           },
           {
             name: 'Receita Comercial Extra (SGC)',
-            description: 'Total em R$/mês de novas demandas identificadas pela IA nos e-mails (aberturas de filiais, expansão de folha, BPO).',
+            description: 'Total em R$/mês de novas demandas identificadas pela IA nos e-mails (aberturas de filiais, expansão de folha, BPO). Clique para ver cada oportunidade que monta o total.',
+          },
+          {
+            name: 'Ver composição (clique no cartão)',
+            description: 'Todo cartão KPI do cockpit, da carga de equipe, do boletim e do potencial comercial abre um diálogo listando as linhas que somam o número exibido.',
+            tip: 'Use a composição para auditar o valor antes de escalar para a diretoria.',
           },
           {
             name: 'Alerta Proativo de Calendário Fiscal',

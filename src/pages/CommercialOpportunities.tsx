@@ -19,6 +19,12 @@ import {
   ArrowRight,
   RefreshCw
 } from 'lucide-react';
+import { DialogoComposicao } from '@/components/common/CartaoComposicao';
+import {
+  composicaoOportunidadesComerciais,
+  formatarMoedaBr,
+  potencialReceitaExtra,
+} from '@/lib/composicao-cartoes';
 
 export const CommercialOpportunities: React.FC = () => {
   const { activeTenant, hasPermission, user } = useAuth();
@@ -52,9 +58,8 @@ export const CommercialOpportunities: React.FC = () => {
     return matchSearch && matchStatus;
   });
 
-  const totalPotentialRevenue = leads
-    .filter((l) => l.status !== 'DECLINADO')
-    .reduce((acc, l) => acc + l.estimatedMonthlyValue, 0);
+  const totalPotentialRevenue = potencialReceitaExtra(leads);
+  const [composicaoAberta, setComposicaoAberta] = useState(false);
 
   const handleCopyProposal = () => {
     if (!selectedLead) return;
@@ -132,17 +137,32 @@ export const CommercialOpportunities: React.FC = () => {
             </p>
           </div>
 
-          <div className="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setComposicaoAberta(true)}
+            data-testid="kpi-oportunidades-receita"
+            title="Ver composição"
+            className="bg-emerald-50 border border-emerald-200 px-4 py-2.5 rounded-xl flex items-center gap-3 text-left hover:border-emerald-400 hover:shadow-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          >
             <div className="w-9 h-9 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold">
               <DollarSign className="w-5 h-5" />
             </div>
             <div>
               <p className="text-[10px] font-bold text-emerald-800 uppercase">Potencial de Receita Extra</p>
               <p className="text-lg font-black text-emerald-700 leading-tight">
-                R$ {totalPotentialRevenue.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}/mês
+                {formatarMoedaBr(totalPotentialRevenue)}/mês
               </p>
+              <p className="text-[10px] font-semibold text-emerald-700/80 mt-0.5">Ver composição →</p>
             </div>
-          </div>
+          </button>
+          <DialogoComposicao
+            aberto={composicaoAberta}
+            onAbertoChange={setComposicaoAberta}
+            titulo="Potencial de Receita Extra"
+            explica="Soma estimada em R$/mês das oportunidades comerciais ativas (exceto declinadas) detectadas pela IA."
+            linhas={composicaoOportunidadesComerciais(leads)}
+            rodape={`Total potencial: ${formatarMoedaBr(totalPotentialRevenue)}/mês`}
+          />
         </div>
 
         {/* Filtros */}

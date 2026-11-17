@@ -7,14 +7,17 @@ import {
   AlertTriangle,
   Clock,
   Mail,
-  ShieldAlert,
   CheckCircle2,
-  TrendingUp,
   Flame,
-  ArrowRightLeft,
   Sparkles,
-  Award
+  ArrowRightLeft,
 } from 'lucide-react';
+import { CartaoComposicao } from '@/components/common/CartaoComposicao';
+import {
+  composicaoAnalistasMonitorados,
+  composicaoTempoRespostaEquipe,
+  composicaoVolumeEmailsEquipe,
+} from '@/lib/composicao-cartoes';
 
 export const TeamWorkload: React.FC = () => {
   const { activeTenant, currentTenant } = useAuth();
@@ -88,31 +91,44 @@ export const TeamWorkload: React.FC = () => {
         </div>
       </div>
 
-      {/* KPIs de Capacidade Operacional */}
+      {/* KPIs de Capacidade Operacional — clique abre a composição */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-1">
-          <span className="text-xs text-slate-500 flex items-center gap-1.5 font-bold">
-            <Mail className="w-4 h-4 text-[#004677]" /> Volume Total de E-mails (Mês)
-          </span>
-          <span className="text-2xl font-black text-slate-900">{totalEmails}</span>
-          <span className="text-[10px] text-slate-400 block">Distribuídos entre a equipe</span>
-        </div>
+        <CartaoComposicao
+          testId="kpi-equipe-volume-emails"
+          titulo="Volume Total de E-mails (Mês)"
+          valor={totalEmails}
+          detalhe="Distribuídos entre a equipe"
+          explica="Soma dos e-mails recebidos no mês por cada analista monitorado na unidade."
+          linhas={composicaoVolumeEmailsEquipe(workload)}
+          rodape={`Total: ${totalEmails.toLocaleString('pt-BR')} e-mails`}
+          className="p-4"
+          icone={<Mail className="w-4 h-4 text-primary" />}
+        />
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-1">
-          <span className="text-xs text-slate-500 flex items-center gap-1.5 font-bold">
-            <Clock className="w-4 h-4 text-[#6DCFF6]" /> Tempo Médio de Resposta
-          </span>
-          <span className="text-2xl font-black text-[#004677]">{avgResponseTime} horas</span>
-          <span className="text-[10px] text-emerald-600 block font-bold">✓ Dentro do SLA contratual</span>
-        </div>
+        <CartaoComposicao
+          testId="kpi-equipe-tempo-resposta"
+          titulo="Tempo Médio de Resposta"
+          valor={`${avgResponseTime} horas`}
+          valorClassName="text-primary"
+          detalhe={<span className="font-bold text-emerald-600">✓ Dentro do SLA contratual</span>}
+          explica="Média aritmética do tempo de resposta (horas) dos analistas da unidade."
+          linhas={composicaoTempoRespostaEquipe(workload)}
+          rodape={`Média da equipe: ${avgResponseTime} h`}
+          className="p-4"
+          icone={<Clock className="w-4 h-4 text-accent" />}
+        />
 
-        <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs space-y-1">
-          <span className="text-xs text-slate-500 flex items-center gap-1.5 font-bold">
-            <Users className="w-4 h-4 text-[#D2BE8C]" /> Analistas Monitorados
-          </span>
-          <span className="text-2xl font-black text-slate-900">{workload.length}</span>
-          <span className="text-[10px] text-slate-400 block">Fiscal, DP, Contábil e Legal</span>
-        </div>
+        <CartaoComposicao
+          testId="kpi-equipe-analistas"
+          titulo="Analistas Monitorados"
+          valor={workload.length}
+          detalhe="Fiscal, DP, Contábil e Legal"
+          explica="Lista dos analistas incluídos na matriz de carga e burnout da unidade."
+          linhas={composicaoAnalistasMonitorados(workload)}
+          rodape={`${overloadedCount} sobrecarregado(s) · ${workload.length} no total`}
+          className="p-4"
+          icone={<Users className="w-4 h-4 text-amber-700" />}
+        />
       </div>
 
       {/* Grid de Analistas e Recomendações de IA */}
